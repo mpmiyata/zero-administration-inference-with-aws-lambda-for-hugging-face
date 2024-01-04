@@ -49,7 +49,7 @@ class ServerlessHuggingFaceStack(Stack):
                 timeout=Duration.seconds(600),
                 vpc=vpc,
                 filesystem=lambda_.FileSystem.from_efs_access_point(access_point, '/mnt/hf_models_cache'),
-                environment={"TRANSFORMERS_CACHE": "/mnt/hf_models_cache"},
+                environment={"TRANSFORMERS_CACHE": "/mnt/hf_models_cache", "PYTHONIOENCODING": "utf-8"},
             )
 
 app = App()

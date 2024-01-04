@@ -1,12 +1,7 @@
 ARG FUNCTION_DIR="/function/"
 
-FROM huggingface/transformers-pytorch-cpu as build-image
+FROM public.ecr.aws/docker/library/python:buster as build-image
 
-
-# Include global arg in this stage of the build
-ARG FUNCTION_DIR
-
-# Install aws-lambda-cpp build dependencies
 RUN apt-get update && \
   apt-get install -y \
   g++ \
@@ -15,19 +10,18 @@ RUN apt-get update && \
   unzip \
   libcurl4-openssl-dev
 
-
-# Create function directory
+ARG FUNCTION_DIR
 RUN mkdir -p ${FUNCTION_DIR}
-
-# Copy handler function
 COPY *.py ${FUNCTION_DIR}
 
-# Install the function's dependencies
 RUN pip uninstall --yes jupyter
-RUN pip install --target ${FUNCTION_DIR} awslambdaric
-RUN pip install --target ${FUNCTION_DIR} sentencepiece protobuf
+RUN pip install --target ${FUNCTION_DIR} torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --target ${FUNCTION_DIR} transformers==4.35.2
+RUN pip install --target ${FUNCTION_DIR} scikit-learn
+RUN pip install --target ${FUNCTION_DIR} awslambdaric 
+RUN pip install --target ${FUNCTION_DIR} sentencepiece protobuf 
 
-FROM huggingface/transformers-pytorch-cpu
+FROM public.ecr.aws/docker/library/python:buster
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
@@ -40,4 +34,4 @@ COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
 ENTRYPOINT [ "python3", "-m", "awslambdaric" ]
 
 # This will get replaced by the proper handler by the CDK script
-CMD [ "sentiment.handler" ]
+CMD [ "oads.handler" ]
